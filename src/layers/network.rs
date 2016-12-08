@@ -1,7 +1,9 @@
 use pcap::{Packet};
 use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
 use byteorder::{NetworkEndian, ReadBytesExt};
+// from this project
 use helpers::{ipv4_to_string};
+use traits::{Chainable};
 
 
 #[derive(Debug)]
@@ -67,3 +69,9 @@ impl IPv4 {
     }
 }
 
+
+impl Chainable for IPv4 {
+    fn get_end(&self) -> usize {
+        (self.header_length * 4) as usize
+    }
+}
