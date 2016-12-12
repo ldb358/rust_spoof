@@ -18,7 +18,7 @@ pub struct IPv4 {
     pub checksum: u16,
     pub src_ip: [u8; 4],
     pub dst_ip: [u8; 4],
-    pub options: Vec<u8>
+    pub options: Vec<u32>
 }
 
 
@@ -55,6 +55,9 @@ impl IPv4 {
         ip.checksum = read.read_u16::<NetworkEndian>().unwrap();
         try!(read.read_exact(&mut ip.src_ip));
         try!(read.read_exact(&mut ip.dst_ip));
+        for i in 0..(header_length - 5) {
+           // TODO 
+        }
         Ok(ip)
     }
 
