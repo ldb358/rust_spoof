@@ -8,6 +8,7 @@ use traits::{Chainable};
 
 #[derive(Debug)]
 pub struct IPv4 {
+    packet_offset: usize,
     pub version: u8, // first 4
     pub header_length: u8, // last 4
     pub p_type: u8,
@@ -20,7 +21,7 @@ pub struct IPv4 {
     pub checksum: u16,
     pub src_ip: [u8; 4],
     pub dst_ip: [u8; 4],
-    pub options: Vec<u8>
+    pub options: Vec<u32>
 }
 
 
@@ -29,6 +30,7 @@ impl IPv4 {
         let mut read = Cursor::new(packet.data);
         try!(read.seek(SeekFrom::Start(offset as u64)));
         let mut ip = IPv4 {
+            packet_offset: offset,
             version: 0,
             header_length: 0,
             p_type: 0,
@@ -57,6 +59,9 @@ impl IPv4 {
         ip.checksum = read.read_u16::<NetworkEndian>().unwrap();
         try!(read.read_exact(&mut ip.src_ip));
         try!(read.read_exact(&mut ip.dst_ip));
+        for i in 0..(header_length - 5) {
+           options.push(read.read_u32::<NetworkEndian>().unwrap());
+        }
         Ok(ip)
     }
 
@@ -72,6 +77,6 @@ impl IPv4 {
 
 impl Chainable for IPv4 {
     fn get_end(&self) -> usize {
-        (self.header_length * 4) as usize
+        self.packet_offset + (self.header_length * 4) as usize
     }
 }
