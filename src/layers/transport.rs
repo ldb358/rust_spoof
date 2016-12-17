@@ -1,10 +1,19 @@
+use pcap::{Packet};
+use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
+use byteorder::{NetworkEndian, ReadBytesExt};
+// from this project
+use helpers::{bit_set_u16};
+use traits::{Chainable};
+
+
+
 #[derive(Debug)]
 pub struct TCP {
     packet_offset: usize,
     pub src_port: u16,
     pub dst_port: u16,
-    pub seq: u32,
-    pub ack: u32,
+    pub seq_number: u32,
+    pub ack_number: u32,
     pub offset: u16, // first 0-3
     pub reserved: u16, // second 4-6
     pub flags: u16, // 7-15
@@ -25,15 +34,15 @@ pub struct TCP {
 }
 
 impl TCP {
-    pub fn new(packet: &Packet, offset: usize) {
+    pub fn new(packet: &Packet, offset: usize) -> Result<TCP, IOError> {
         let mut read = Cursor::new(packet.data);
         try!(read.seek(SeekFrom::Start(offset as u64)));
         let mut tcp = TCP {
             packet_offset: offset,
             src_port: 0,
             dst_port: 0,
-            seq: 0,
-            ack: 0,
+            seq_number: 0,
+            ack_number: 0,
             offset: 0, // first 0-3
             reserved: 0, // second 4-6
             flags: 0, // 7-15
@@ -53,9 +62,29 @@ impl TCP {
         };
         tcp.src_port = read.read_u16::<NetworkEndian>().unwrap();
         tcp.dst_port = read.read_u16::<NetworkEndian>().unwrap();
-        tcp.seq = read.read_u32::<NetworkEndian>().unwrap();
-        tcp.ack = read.read_u32::<NetworkEndian>().unwrap();
-        
+        tcp.seq_number = read.read_u32::<NetworkEndian>().unwrap();
+        tcp.ack_number = read.read_u32::<NetworkEndian>().unwrap();
+		let temp = read.read_u16::<NetworkEndian>().unwrap();
+        tcp.offset = (0b1111000000000000 & temp) >> 12;
+        tcp.reserved = (0b0000111000000000 & temp) >> 9;
+        // get the tcp flags
+        tcp.flags = 0b0000000111111111 & temp;
+        // get whether each flag is set
+        tcp.ns = bit_set_u16(temp, 7);
+        tcp.cwr = bit_set_u16(temp, 8);
+        tcp.ece = bit_set_u16(temp, 9);
+        tcp.urg = bit_set_u16(temp, 10);
+        tcp.ack = bit_set_u16(temp, 11);
+        tcp.psh = bit_set_u16(temp, 12);
+        tcp.rst = bit_set_u16(temp, 13);
+        tcp.syn = bit_set_u16(temp, 14);
+        tcp.fin = bit_set_u16(temp, 15);
+        tcp.window_size = read.read_u16::<NetworkEndian>().unwrap();
+        tcp.checksum = read.read_u16::<NetworkEndian>().unwrap();
+        tcp.urg_pointer = read.read_u16::<NetworkEndian>().unwrap();
+        for _ in 0..(&tcp.offset - 5) {
+           tcp.options.push(read.read_u32::<NetworkEndian>().unwrap());
+        }
         Ok(tcp)
     }
 

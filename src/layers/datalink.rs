@@ -1,8 +1,9 @@
 use helpers::{string_to_mac, mac_to_string, MAC_LEN};
-use traits::{Chainable};
+use traits::{Chainable, Datalink, NetworkLayer};
 use pcap::{Packet};
 use std::io::{Cursor, Read, Error as IOError};
 use byteorder::{NetworkEndian, ReadBytesExt};
+
 
 #[derive(Debug)]
 pub struct Ethernet {
@@ -47,5 +48,14 @@ impl Chainable for Ethernet {
     fn get_end(&self) -> usize {
         // returns the length of ethernet packet
         MAC_LEN * 2 + 2
+    }
+}
+
+impl Datalink for Ethernet {
+    fn get_next_level(&self) -> NetworkLayer {
+        if self.p_type == 0x0800u16 {
+            return NetworkLayer::IPv4;
+        }
+        NetworkLayer::Other
     }
 }

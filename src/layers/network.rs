@@ -5,7 +5,6 @@ use byteorder::{NetworkEndian, ReadBytesExt};
 use helpers::{ipv4_to_string};
 use traits::{Chainable};
 
-
 #[derive(Debug)]
 pub struct IPv4 {
     packet_offset: usize,
@@ -59,8 +58,8 @@ impl IPv4 {
         ip.checksum = read.read_u16::<NetworkEndian>().unwrap();
         try!(read.read_exact(&mut ip.src_ip));
         try!(read.read_exact(&mut ip.dst_ip));
-        for i in 0..(header_length - 5) {
-           options.push(read.read_u32::<NetworkEndian>().unwrap());
+        for _ in 0..(&ip.header_length - 5) {
+           ip.options.push(read.read_u32::<NetworkEndian>().unwrap());
         }
         Ok(ip)
     }
