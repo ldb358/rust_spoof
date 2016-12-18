@@ -9,10 +9,20 @@ pub enum NetworkLayer {
     Other
 }
 
+pub enum TransportLayer {
+    TCP,
+    UDP,
+    Other
+}
+
 pub trait Chainable {
     fn get_end(&self) -> usize;
 }
 
 pub trait Datalink {
 	fn get_next_level(&self) -> NetworkLayer;	
+}
+
+pub trait Network {
+    fn get_next_level(&self) -> TransportLayer; 
 }
