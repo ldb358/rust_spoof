@@ -3,7 +3,7 @@ use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
 use byteorder::{NetworkEndian, ReadBytesExt};
 // from this project
 use helpers::{ipv4_to_string};
-use traits::{Chainable};
+use traits::{Chainable, Network, TransportLayer};
 
 #[derive(Debug)]
 pub struct IPv4 {
@@ -77,5 +77,16 @@ impl IPv4 {
 impl Chainable for IPv4 {
     fn get_end(&self) -> usize {
         self.packet_offset + (self.header_length * 4) as usize
+    }
+}
+
+impl Network for IPv4 {
+    fn get_next_level(&self) -> TransportLayer {
+        match self.protocol {
+            6 => TransportLayer::TCP,
+            17 => TransportLayer::UDP,
+            _ => TransportLayer::Other
+        }
+        
     }
 }

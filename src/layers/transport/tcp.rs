@@ -6,7 +6,6 @@ use helpers::{bit_set_u16};
 use traits::{Chainable};
 
 
-
 #[derive(Debug)]
 pub struct TCP {
     packet_offset: usize,
@@ -87,5 +86,9 @@ impl TCP {
         }
         Ok(tcp)
     }
-
+}
+impl Chainable for TC {
+    fn get_end(&self) -> usize {
+        self.packet_offset + (self.offset * 4) as usize
+    }
 }
