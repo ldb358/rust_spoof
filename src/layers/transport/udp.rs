@@ -34,8 +34,9 @@ impl UDP {
     }
 
 }
-impl Chainable for TC {
+
+impl Chainable for UDP {
     fn get_end(&self) -> usize {
-        self.packet_offset + length as usize
+        self.packet_offset + self.length as usize
     }
 }

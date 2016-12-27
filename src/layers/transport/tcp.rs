@@ -87,7 +87,7 @@ impl TCP {
         Ok(tcp)
     }
 }
-impl Chainable for TC {
+impl Chainable for TCP {
     fn get_end(&self) -> usize {
         self.packet_offset + (self.offset * 4) as usize
     }
