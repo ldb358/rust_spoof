@@ -91,4 +91,8 @@ impl Chainable for TCP {
     fn get_end(&self) -> usize {
         self.packet_offset + (self.offset * 4) as usize
     }
+    
+    fn to_binary(&self, higher_levels: &[u8]) -> [u8] {
+        let buf: [u8; ] = 
+    }
 }

@@ -17,6 +17,7 @@ pub enum TransportLayer {
 
 pub trait Chainable {
     fn get_end(&self) -> usize;
+    fn to_binary(&self, higher_levels: &[u8]) -> [u8]; 
 }
 
 pub trait Datalink {

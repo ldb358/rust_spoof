@@ -1,6 +1,5 @@
 pub const MAC_LEN: usize = 6;
 
-
 pub fn mac_to_string(mac: &[u8; MAC_LEN]) -> String {
     let strs: Vec<String> = mac.iter()
         .map(|b| format!("{:02X}", b))
