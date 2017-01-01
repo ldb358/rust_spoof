@@ -93,6 +93,12 @@ impl Chainable for TCP {
     }
     
     fn to_binary(&self, higher_levels: &[u8]) -> [u8] {
-        let buf: [u8; ] = 
+        let tcp_len = 20 + (4 * self.options.len()); // Tcp min + 4 bytes per option word
+        let mut buf: [u8; tcp_len] =  [0; tcp_len];
+        NetworkEndian::write_u16(&mut buf, self.src_port);
+        NetworkEndian::write_u16(&mut buf, self.dst_port);
+        NetworkEndian::write_u32(&mut buf, self.seq_number);
+        NetworkEndian::write_u32(&mut buf, self.ack_number);
+        buf
     }
 }
