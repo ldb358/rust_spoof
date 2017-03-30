@@ -1,8 +1,7 @@
 use pcap::{Packet};
-use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
-use byteorder::{NetworkEndian, ReadBytesExt};
+use std::io::{Error as IOError, Cursor, Seek, SeekFrom};
+use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 // from this project
-use helpers::{bit_set_u16};
 use traits::{Chainable};
 
 
@@ -38,5 +37,12 @@ impl UDP {
 impl Chainable for UDP {
     fn get_end(&self) -> usize {
         self.packet_offset + self.length as usize
+    }
+    
+    fn to_binary(&self, vec: &mut Vec<u8>) {
+        vec.write_u16::<NetworkEndian>(self.src_port).unwrap();
+        vec.write_u16::<NetworkEndian>(self.dst_port).unwrap();
+        vec.write_u16::<NetworkEndian>(self.length).unwrap();
+        vec.write_u16::<NetworkEndian>(self.checksum).unwrap();
     }
 }

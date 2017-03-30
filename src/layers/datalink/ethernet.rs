@@ -2,7 +2,7 @@ use helpers::{string_to_mac, mac_to_string, MAC_LEN};
 use traits::{Chainable, Datalink, NetworkLayer};
 use pcap::{Packet};
 use std::io::{Cursor, Read, Error as IOError};
-use byteorder::{NetworkEndian, ReadBytesExt};
+use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 
 
 #[derive(Debug)]
@@ -48,6 +48,16 @@ impl Chainable for Ethernet {
     fn get_end(&self) -> usize {
         // returns the length of ethernet packet
         MAC_LEN * 2 + 2
+    }
+    
+    fn to_binary(&self, vec: &mut Vec<u8>) {
+        for val in self.dst_mac.into_iter() {
+            vec.write_u8(*val).unwrap();
+        }
+        for val in self.src_mac.into_iter() {
+            vec.write_u8(*val).unwrap();
+        }
+        vec.write_u16::<NetworkEndian>(self.p_type).unwrap();
     }
 }
 

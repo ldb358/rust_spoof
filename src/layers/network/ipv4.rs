@@ -1,6 +1,6 @@
 use pcap::{Packet};
 use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
-use byteorder::{NetworkEndian, ReadBytesExt};
+use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 // from this project
 use helpers::{ipv4_to_string};
 use traits::{Chainable, Network, TransportLayer};
@@ -78,6 +78,33 @@ impl Chainable for IPv4 {
     fn get_end(&self) -> usize {
         self.packet_offset + (self.header_length * 4) as usize
     }
+
+    fn to_binary(&self, vec: &mut Vec<u8>) {
+        let mut temp = 0u8;
+        temp |= self.version << 4;
+        temp |= self.header_length;
+        vec.write_u8(temp).unwrap();
+        vec.write_u8(self.p_type).unwrap();
+        vec.write_u16::<NetworkEndian>(self.length).unwrap();
+        vec.write_u16::<NetworkEndian>(self.id).unwrap();
+        let mut flag_frag = 0u16;
+        flag_frag |= (self.flags as u16) << 5;
+        flag_frag |= self.fragment_offset;
+        vec.write_u16::<NetworkEndian>(flag_frag).unwrap();
+        vec.write_u8(self.ttl).unwrap();
+        vec.write_u8(self.protocol).unwrap();
+        vec.write_u16::<NetworkEndian>(self.checksum).unwrap();
+        for val in self.src_ip.into_iter() {
+            vec.write_u8(*val).unwrap();
+        }
+        for val in self.dst_ip.into_iter() {
+            vec.write_u8(*val).unwrap();
+        }
+        for opt in &self.options {
+            vec.write_u32::<NetworkEndian>(*opt).unwrap();
+        }
+    }
+
 }
 
 impl Network for IPv4 {
@@ -88,5 +115,5 @@ impl Network for IPv4 {
             _ => TransportLayer::Other
         }
         
-    }
+    } 
 }

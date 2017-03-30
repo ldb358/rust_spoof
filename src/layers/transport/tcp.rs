@@ -1,6 +1,6 @@
 use pcap::{Packet};
-use std::io::{Error as IOError, Cursor, Read, Seek, SeekFrom};
-use byteorder::{NetworkEndian, ReadBytesExt};
+use std::io::{Error as IOError, Cursor, Seek, SeekFrom};
+use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 // from this project
 use helpers::{bit_set_u16};
 use traits::{Chainable};
@@ -92,13 +92,21 @@ impl Chainable for TCP {
         self.packet_offset + (self.offset * 4) as usize
     }
     
-    fn to_binary(&self, higher_levels: &[u8]) -> [u8] {
-        let tcp_len = 20 + (4 * self.options.len()); // Tcp min + 4 bytes per option word
-        let mut buf: [u8; tcp_len] =  [0; tcp_len];
-        NetworkEndian::write_u16(&mut buf, self.src_port);
-        NetworkEndian::write_u16(&mut buf, self.dst_port);
-        NetworkEndian::write_u32(&mut buf, self.seq_number);
-        NetworkEndian::write_u32(&mut buf, self.ack_number);
-        buf
+    fn to_binary(&self, vec: &mut Vec<u8>) {
+        vec.write_u16::<NetworkEndian>(self.src_port).unwrap();
+        vec.write_u16::<NetworkEndian>(self.dst_port).unwrap();
+        vec.write_u32::<NetworkEndian>(self.seq_number).unwrap();
+        vec.write_u32::<NetworkEndian>(self.ack_number).unwrap();
+        let mut temp = 0u16;
+        temp |= self.offset << 12;
+        temp |= self.reserved << 9;
+        temp |= self.flags;
+        vec.write_u16::<NetworkEndian>(temp).unwrap();
+        vec.write_u16::<NetworkEndian>(self.window_size).unwrap();
+        vec.write_u16::<NetworkEndian>(self.checksum).unwrap();
+        vec.write_u16::<NetworkEndian>(self.urg_pointer).unwrap();
+        for opt in &self.options {
+            vec.write_u32::<NetworkEndian>(*opt).unwrap();
+        }
     }
 }
