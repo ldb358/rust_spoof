@@ -6,14 +6,26 @@ use spoof::layers::network::{IPv4};
 use spoof::layers::transport::{TCP, UDP};
 use spoof::traits::{Chainable, Datalink, Network, NetworkLayer, TransportLayer};
 use pcap::{Device, Capture};
-
+use std::io::{self, BufRead, stdout, Write};
 
 
 fn main() {
-    let main_device = Device{name: String::from("wlp4s0"), desc: Some(String::from("Wired connection"))};
-    println!("Got {:?}", &main_device);
+    let mut dev: Device = Device{name: String::from(""), desc: None};
+    for device in pcap::Device::list().unwrap() {
+        println!("Found device! {:?}", device);
+        print!("Use?[y/n]:");
+        stdout().flush();
+        let mut line = String::new();
+        let stdin = io::stdin();
+        stdin.lock().read_line(&mut line).expect("Could not read line");
+        if line.starts_with("y") {
+            dev.name = device.name;
+            dev.desc = device.desc;
+            break;
+        }
+    }
 
-    let mut cap = Capture::from_device(main_device).unwrap()
+    let mut cap = Capture::from_device(dev).unwrap()
         .promisc(true)
         .snaplen(65535)
         .open().unwrap();
