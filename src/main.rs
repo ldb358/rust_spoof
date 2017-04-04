@@ -14,7 +14,7 @@ fn main() {
     for device in pcap::Device::list().unwrap() {
         println!("Found device! {:?}", device);
         print!("Use?[y/n]:");
-        stdout().flush();
+        stdout().flush().unwrap();
         let mut line = String::new();
         let stdin = io::stdin();
         stdin.lock().read_line(&mut line).expect("Could not read line");
