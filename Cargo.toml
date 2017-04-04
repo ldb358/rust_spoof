@@ -3,6 +3,11 @@ name = "spoof"
 version = "0.0.1"
 authors = ["ldb358 <ldb358@gmail.com>"]
 
+[[bin]]
+name = "demo"
+doc = false
+path = "src/main.rs"
+
 [dependencies]
 pcap = "0.5.7"
 byteorder = "0.5.3"
